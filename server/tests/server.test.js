@@ -4,7 +4,7 @@ const request = require('supertest');
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 
-//Clear the test database for each test. Note it will run before every test, so count is 0 at the start.
+//Clear the test database for each test. Note it will run before every test, so count is 0 at the start. DON'T use prod DB here as it will get wiped.
 beforeEach((done) => {
 	Todo.remove({}).then(() => done());
 })
