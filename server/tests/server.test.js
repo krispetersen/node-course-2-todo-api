@@ -1,0 +1,56 @@
+const expect = require('expect');
+const request = require('supertest');
+
+const {app} = require('./../server');
+const {Todo} = require('./../models/todo');
+
+//Clear the test database for each test. Note it will run before every test, so count is 0 at the start.
+beforeEach((done) => {
+	Todo.remove({}).then(() => done());
+})
+
+describe('POST /todos', () => {
+	it('should create a new todo', (done) => {
+		var text = 'Test todo text';
+
+		//Call test via supertest
+		request(app)
+			.post('/todos')
+			.send({text}) //ES6 to replace 'text': 'text'
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.text).toBe(text);
+			})
+			.end((err, res) => {
+				if (err) {
+					return done(err);
+				}
+
+				Todo.find().then((todos) => {
+					expect(todos.length).toBe(1);
+					expect(todos[0].text).toBe(text);
+					done();
+				}).catch((e) => done(e));		
+			});
+	});
+
+	it('should not create todo with invalid body data', (done) => {
+
+		//Call test via supertest
+		request(app)
+			.post('/todos')
+			.send({}) //ES6 to replace 'text': 'text'
+			.expect(400)
+			.end((err, res) => {
+				if (err) {
+					return done(err);
+				}
+
+				Todo.find().then((todos) => {
+					expect(todos.length).toBe(0);
+					done();
+				}).catch((e) => done(e));		
+			});
+	});
+});
+
