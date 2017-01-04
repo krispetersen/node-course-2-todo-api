@@ -1,5 +1,6 @@
 var express = require('express');
 var bodyParser = require('body-parser');
+var {ObjectID} = require('mongodb');
 
 //using destructuring with this syntax {something}
 var {mongoose} = require('./db/mongoose');
@@ -32,7 +33,21 @@ app.get('/todos', (req, res) => {
 	})
 });
 
+app.get('/todos/:id', (req, res) => {
+	//***check validity of ID
+	var id = req.params.id;
+	if (!ObjectID.isValid(id)) {
+ 		return res.status(404).send();
+	}
 
+	//then passes back the success and error handlers
+	Todo.findById(id).then((todo) => { //get back results into "todo"
+		if (!todo) {
+			return res.status(404).send(); //send back a response with error 404 and no data
+		}
+		res.send({todo}); //respond with object for flexibility
+	}).catch((e) => res.status(400).send());
+});
 
 app.listen(3000, () => {
 	console.log('Started on port 3000');
