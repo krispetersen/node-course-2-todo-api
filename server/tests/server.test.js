@@ -1,15 +1,18 @@
 const expect = require('expect');
 const request = require('supertest');
+const {ObjectID} = require('mongodb');
 
 const {app} = require('./../server');
 const {Todo} = require('./../models/todo');
 
+// set constant test data to use, including a known ID (otherwise mongo creates a random ID at insert and we wouldn't know it)
 const todos = [{
+	_id: new ObjectID(),
 	text: 'First test todo'
 }, {
+	_id: new ObjectID(),
 	text: 'Second test todo'
 }];
-
 
 
 //Clear the test database for each test then load in some reliable sample data. Note it will run before every test, so count is 0 at the start. DON'T use prod DB here as it will get wiped.
@@ -74,4 +77,33 @@ describe('GET /todos', () => {
 			})
 			.end(done); //no need to add on a function to end() because we're not doing anything asynchronously
 	});
+});
+
+describe('GET /todos/:id', () => {
+	it('should return todo doc', (done) => {
+		request(app)
+			.get(`/todos/${todos[0]._id.toHexString()}`) //change object into a string
+			.expect(200)
+			.expect((res) => {
+				expect(res.body.todo.text).toBe(todos[0].text);
+			})
+			.end(done);
+	});
+
+	it('should return a 404 if todo not found', (done) => {
+		var newObjId = new ObjectID().toHexString();
+
+		request(app)
+			.get(`/todos/${newObjId}`)
+			.expect(404)
+			.end(done);
+	});
+
+	it('should return a 404 for non-object IDs', (done) => {
+		request(app)
+			.get('/todos/123')
+			.expect(404)
+			.end(done);
+	});
+
 });

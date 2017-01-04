@@ -12,6 +12,7 @@ var app = express();
 //configure middleware
 app.use(bodyParser.json());
 
+
 app.post('/todos', (req, res) => {
 	//new instance of Todo model
 	var todo = new Todo({
@@ -25,6 +26,7 @@ app.post('/todos', (req, res) => {
 	});
 });
 
+
 app.get('/todos', (req, res) => {
 	Todo.find().then((todos) => {
 		res.send({todos}) //Use ES6 to send object vs. array to keep things flexible for the future
@@ -32,6 +34,7 @@ app.get('/todos', (req, res) => {
 		res.status(400).send(e);
 	})
 });
+
 
 app.get('/todos/:id', (req, res) => {
 	//***check validity of ID
@@ -48,6 +51,7 @@ app.get('/todos/:id', (req, res) => {
 		res.send({todo}); //respond with object for flexibility
 	}).catch((e) => res.status(400).send());
 });
+
 
 app.listen(3000, () => {
 	console.log('Started on port 3000');
