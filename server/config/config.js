@@ -1,3 +1,5 @@
+//none of this matters on Heroku as they set value of 'production' by default
+
 var env = process.env.NODE_ENV || 'development';
 
 if (env === 'development') {

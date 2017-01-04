@@ -106,6 +106,24 @@ app.patch('/todos/:id', (req, res) => {
 });
 
 
+// POST Users
+app.post('/users', (req, res) => {
+	//grab only the data we want from the user to prevent other injections
+	var body = _.pick(req.body, ['email', 'password']);
+
+	//new instance of User model
+	var user = new User(body);
+
+	user.save().then(() => {
+		return user.generateAuthToken();
+	}).then((token) => {
+		res.header('x-auth', token).send(user);
+	}).catch((e) => {
+		res.status(400).send(e);
+	})
+});
+
+
 app.listen(port, () => {
 	console.log(`Started on port ${port}`);
 });
