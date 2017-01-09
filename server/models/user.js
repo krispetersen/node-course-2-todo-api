@@ -55,6 +55,16 @@ UserSchema.methods.generateAuthToken = function () {
 	});
 };
 
+UserSchema.methods.removeToken = function (token) {
+	var user = this;
+
+	return user.update({
+		$pull: { //mongo function to let you remove items from an array
+			tokens: {token}
+		}
+	});
+};
+
 UserSchema.statics.findByToken = function (token) {
 	var User = this; //model method called with this binding and capital User
 	var decoded;
