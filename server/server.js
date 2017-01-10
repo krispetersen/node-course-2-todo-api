@@ -19,10 +19,12 @@ const port = process.env.PORT;
 app.use(bodyParser.json());
 
 
-app.post('/todos', (req, res) => {
+// Creata a new todo and use our own 'authenticate' middleware to assign to current user
+app.post('/todos', authenticate, (req, res) => {
 	//new instance of Todo model
 	var todo = new Todo({
-		text: req.body.text
+		text: req.body.text,
+		_creator: req.user._id
 	});
 
 	todo.save().then((doc) => {
@@ -32,9 +34,11 @@ app.post('/todos', (req, res) => {
 	});
 });
 
-
-app.get('/todos', (req, res) => {
-	Todo.find().then((todos) => {
+// Get a user's todos
+app.get('/todos', authenticate, (req, res) => {
+	Todo.find({
+		_creator: req.user._id //filter todos by logged in user's id
+	}).then((todos) => {
 		res.send({todos}) //Use ES6 to send object vs. array to keep things flexible for the future
 	}, (e) => {
 		res.status(400).send(e);
@@ -42,7 +46,7 @@ app.get('/todos', (req, res) => {
 });
 
 
-app.get('/todos/:id', (req, res) => {
+app.get('/todos/:id', authenticate, (req, res) => {
 	//***check validity of ID
 	var id = req.params.id;
 	if (!ObjectID.isValid(id)) {
@@ -50,7 +54,10 @@ app.get('/todos/:id', (req, res) => {
 	}
 
 	//then passes back the success and error handlers
-	Todo.findById(id).then((todo) => { //get back results into "todo"
+	Todo.findOne({
+		_id: id,
+		_creator: req.user._id
+	}).then((todo) => { //get back results into "todo"
 		if (!todo) {
 			return res.status(404).send(); //send back a response with error 404 and no data
 		}
@@ -59,13 +66,16 @@ app.get('/todos/:id', (req, res) => {
 });
 
 
-app.delete('/todos/:id', (req, res) => {
+app.delete('/todos/:id', authenticate, (req, res) => {
 	var id = req.params.id;
 	if (!ObjectID.isValid(id)) {
  		return res.status(404).send();
 	}
 
-	Todo.findByIdAndRemove(id).then((todo) => { //get back results into "todo"
+	Todo.findOneAndRemove({
+		_id: id,
+		_creator: req.user._id
+	}).then((todo) => { //get back results into "todo"
 		if (!todo) {
 			return res.status(404).send(); //send back a response with error 404 and no data
 		}
@@ -74,7 +84,7 @@ app.delete('/todos/:id', (req, res) => {
 });
 
 
-app.patch('/todos/:id', (req, res) => {
+app.patch('/todos/:id', authenticate, (req, res) => {
 	var id = req.params.id;
 
 	//create a variable that contains a subset of the information the user passed to us
@@ -95,7 +105,10 @@ app.patch('/todos/:id', (req, res) => {
 	}
 
 	// new is mongoose syntax similar to returnOriginal field
-	Todo.findByIdAndUpdate(id, {$set: body}, {new: true}).then((todo) => {
+	Todo.findOneAndUpdate({
+		_id: id,
+		_creator: req.user._id
+	}, {$set: body}, {new: true}).then((todo) => {
 		if(!todo) {
 			return res.status(404).send();
 		}
